@@ -2,9 +2,13 @@ import os
 import time
 from slackclient import SlackClient
 
+# Resource for setting up slack bots:
+# https://www.fullstackpython.com/blog/build-first-slack-bot-python.html
+
 
 # starterbot's ID as an environment variable
 BOT_ID = os.environ.get("BOT_ID")
+print BOT_ID
 
 
 # constants
@@ -13,6 +17,7 @@ EXAMPLE_COMMAND = "find"
 
 # instantiate Slack & Twilio clients
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
+print slack_client
 
 
 
