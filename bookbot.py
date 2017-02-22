@@ -26,9 +26,13 @@ def handle_command(command, channel):
     response = "Not sure what you mean. Use the *" + EXAMPLE_COMMAND + \
                "* command with numbers, delimited by spaces."
     if command.startswith(EXAMPLE_COMMAND):
-        response = command
+        response = search_book(command)
     slack_client.api_call("chat.postMessage", channel=channel,
                           text=response, as_user=True)
+
+
+def search_book(command):
+    return "processing command:'" + command +"'"
 
 
 def parse_slack_output(slack_rtm_output):
