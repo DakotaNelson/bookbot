@@ -2,11 +2,56 @@ import os
 import time
 from slackclient import SlackClient
 
+import urllib.parse
+import psycopg2
+import datetime
 
 # Resource for setting up slack bots:
 # https://www.fullstackpython.com/blog/build-first-slack-bot-python.html
 
 from tind import search_tind
+
+
+
+# Database stuff
+urllib.parse.uses_netloc.append("postgres")
+url = urllib.parse.urlparse(os.environ["DATABASE_URL"])
+
+def make_conn():
+    global url
+    conn = psycopg2.connect(
+    database=url.path[1:],
+    user=url.username,
+    password=url.password,
+    host=url.hostname,
+    port=url.port)
+    return conn
+
+
+def interact_with_database(instruction, debug=False):
+    """
+    debug = True: returns a string that tells you what you just did.
+    debug = False: returns only cursor contents.
+    """
+    store = None
+    conn = make_conn()
+    with conn.cursor() as cur:
+        # try:
+        cur.execute(instruction)
+        store = [row for row in cur]
+        # except:
+            # pass
+    conn.commit()
+    conn.close()
+    if debug:
+        if store:
+            return "Your instruction was " + str(instruction) + " . Cursor output (if any) is: " + str(store)
+        else:
+            return "Your instruction was " + str(instruction) + " . No cursor output."
+    else:
+        return store
+
+
 
 
 # starterbot's ID as an environment variable
@@ -46,6 +91,17 @@ def handle_command(command, channel):
             slack_client.api_call("chat.postMessage", channel=channel,
                                   text=response, as_user=True)
         return
+
+    elif "events" in command:
+        now = datetime.datetime.now()
+        events = interact_with_database("select * from events where event_start between \'%s-%s-%s\' and \'%s-%s-%s\' order by event_start asc" #timestamps in postgres are 'YYYY-MM-DD HH-MM' 
+                                %(str(now.year), str(now.month), str(now.day),
+                                str(now.year), str(now.month), str(int(now.day)+1)), debug = False)
+        if events:
+            for event in events:
+                response = "Event: {}, Location: {}, Duration: {} to {}, Description: {}, Link: {}".format(event[1], event[5], event[3].time(), event[4].time(), event[6], event[7])
+        else:
+            response = "No events found!" 
 
     slack_client.api_call("chat.postMessage", channel=channel,
                           text=response, as_user=True)
