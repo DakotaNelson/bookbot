@@ -100,6 +100,8 @@ def handle_command(command, channel):
         if events:
             for event in events:
                 response = "Event: {}, Location: {}, Duration: {} to {}, Description: {}, Link: {}".format(event[1], event[5], event[3].time(), event[4].time(), event[6], event[7])
+                slack_client.api_call("chat.postMessage", channel=channel,
+                      text=response, as_user=True)
         else:
             response = "No events found!" 
 
