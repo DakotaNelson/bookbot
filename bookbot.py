@@ -56,7 +56,7 @@ def interact_with_database(instruction, debug=False):
 
 # starterbot's ID as an environment variable
 BOT_ID = os.environ.get("BOT_ID")
-print BOT_ID
+print(BOT_ID)
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
