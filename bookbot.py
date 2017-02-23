@@ -77,19 +77,38 @@ def handle_command(command, channel):
     if EXAMPLE_COMMAND in command:
         print("command: {}".format(command))
         query = command.split('on')[-1].strip()
+        # TODO remove punctuation
         print("query: {}".format(query))
         results = search_tind(query)
-        slack_client.api_call("chat.postMessage", channel=channel,
-                              text="Here are a few!", as_user=True)
+        attachments = []
 
         # only ever show 5 results
         if len(results) > 5:
             results = results[:5]
 
         for result in results:
-            response = "*{}*, by {} ({})".format(result['title'], result['author'], result['link'])
-            slack_client.api_call("chat.postMessage", channel=channel,
-                                  text=response, as_user=True)
+            author = result['author']
+            title = result['title']
+            link = result['link']
+            desc = result['description']
+            attachment = {
+                "fallback": "{}, by {}".format(title, author),
+                "color": "#36a64f",
+                # "pretext": "",
+                # "author_name": author,
+                "title": title,
+                "title_link": link,
+                "text": desc,
+                #"footer": "Olin Bookbot"
+            }
+            attachments.append(attachment)
+
+        slack_client.api_call("chat.postMessage",
+                channel=channel,
+                text="Here are a few!",
+                attachments=attachments,
+                as_user=True)
+
         return
 
     elif "events" in command:

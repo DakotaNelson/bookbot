@@ -22,25 +22,41 @@ def search_tind(search_term):
 
     results = []
     for result in soup.select('record'):
-        # get the title
+        # get the title and author
         for subfield in result.find_all(tag='245'):
+            title = None
             try:
                 title = subfield.find_all(code='a')[0].text
             except IndexError:
-                tile = None
+                pass
 
+            author = None
             try:
                 author = subfield.find_all(code='c')[0].text
             except IndexError:
-                author = None
+                pass
 
         # get a link
+        link = None
         for subfield in result.find_all(tag='856'):
             try:
                 link = subfield.find_all(code='u')[0].text
             except IndexError:
-                link = None
+                pass
 
-        results.append({'title':title, 'link':link, 'author':author})
+        # get the book description
+        desc = None
+        for subfield in result.find_all(tag='520'):
+            try:
+                desc = subfield.find_all(code='a')[0].text
+            except IndexError:
+                pass
+
+        results.append({
+            'title':title,
+            'link':link,
+            'author':author,
+            'description': desc
+        })
 
     return results
