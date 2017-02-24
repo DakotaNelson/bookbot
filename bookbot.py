@@ -74,70 +74,9 @@ def handle_command(command, channel):
         are valid commands. If so, then acts on the commands. If not,
         returns back what it needs for clarification.
     """
-    error_msgs = [
-        "Not sure what you mean.",
-        "I didn't catch that.",
-        "Sorry, I'm confused.",
-        "What was that?",
-        "Huh?",
-        "What?"
-    ]
-
-    joiners = [
-        "Try something like",
-        "Perhaps try",
-        "I'm looking for things like"
-    ]
-
-    examples = [
-        "find me a book",
-        "I want something",
-        "do you have anything",
-        "could you find me something",
-        "what about some stuff",
-        "I'm looking for books",
-        "could you do me a favor and refer me to some fine reading material",
-        "can you get me something",
-        "do you have any books",
-        "I want a book",
-    ]
-
-    queries = [
-        "programming",
-        "engineering",
-        "cats",
-        "dogs",
-        "trains",
-        "information security",
-        "materials science",
-        "chemistry",
-        "space manufacturing",
-        "audio production",
-        "chatbots",
-        "library science",
-        "welding",
-        "musical theory",
-        "the flight speed of unladen swallows"
-    ]
-
-    error = random.choice(error_msgs)
-    joiner = random.choice(joiners)
-    keyword = random.choice(COMMANDS)
-    example = random.choice(examples)
-    query = random.choice(queries)
-
-    response = "{} {} '@bookbot, {} {} {}'".format(
-        error,
-        joiner,
-        example,
-        keyword,
-        query
-    )
 
     # determine if the user used any of our keywords
     tokens = command.split(' ')
-    print("tokens:")
-    print(tokens)
     keyword_locations = []
     for c in COMMANDS:
         try:
@@ -149,9 +88,7 @@ def handle_command(command, channel):
         keyword_location = min(keyword_locations)
     except ValueError:
         # no keywords
-
-        slack_client.api_call("chat.postMessage", channel=channel,
-                              text=response, as_user=True)
+        did_not_understand(channel)
         return
 
     # elif "events" in command:
@@ -224,6 +161,72 @@ def handle_command(command, channel):
             text=random.choice(response_choices),
             attachments=attachments,
             as_user=True)
+
+
+def did_not_understand(channel):
+    error_msgs = [
+        "Not sure what you mean.",
+        "I didn't catch that.",
+        "Sorry, I'm confused.",
+        "What was that?",
+        "Huh?",
+        "What?"
+    ]
+
+    joiners = [
+        "Try something like",
+        "Perhaps try",
+        "I'm looking for things like"
+    ]
+
+    examples = [
+        "find me a book",
+        "I want something",
+        "do you have anything",
+        "could you find me something",
+        "what about some stuff",
+        "I'm looking for books",
+        "could you do me a favor and refer me to some fine reading material",
+        "can you get me something",
+        "do you have any books",
+        "I want a book",
+    ]
+
+    queries = [
+        "programming",
+        "engineering",
+        "cats",
+        "dogs",
+        "trains",
+        "information security",
+        "materials science",
+        "chemistry",
+        "space manufacturing",
+        "audio production",
+        "chatbots",
+        "library science",
+        "welding",
+        "musical theory",
+        "the flight speed of unladen swallows"
+    ]
+
+    error = random.choice(error_msgs)
+    joiner = random.choice(joiners)
+    keyword = random.choice(COMMANDS)
+    example = random.choice(examples)
+    query = random.choice(queries)
+
+    response = "{} {} '@bookbot, {} {} {}'".format(
+        error,
+        joiner,
+        example,
+        keyword,
+        query
+    )
+
+    slack_client.api_call("chat.postMessage", channel=channel,
+                          text=response, as_user=True)
+
 
 def parse_slack_output(slack_rtm_output):
     """
