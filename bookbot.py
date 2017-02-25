@@ -2,12 +2,11 @@ import os
 import time
 import random
 import string
-
-from slackclient import SlackClient
-
-import urllib.parse
-import psycopg2
 import datetime
+import urllib.parse
+
+import psycopg2
+from slackclient import SlackClient
 
 # Resource for setting up slack bots:
 # https://www.fullstackpython.com/blog/build-first-slack-bot-python.html
@@ -23,11 +22,11 @@ url = urllib.parse.urlparse(os.environ["DATABASE_URL"])
 def make_conn():
     global url
     conn = psycopg2.connect(
-    database=url.path[1:],
-    user=url.username,
-    password=url.password,
-    host=url.hostname,
-    port=url.port)
+        database=url.path[1:],
+        user=url.username,
+        password=url.password,
+        host=url.hostname,
+        port=url.port)
     return conn
 
 
@@ -59,11 +58,10 @@ def interact_with_database(instruction, debug=False):
 
 # starterbot's ID as an environment variable
 BOT_ID = os.environ.get("BOT_ID")
-print(BOT_ID)
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
-COMMANDS = ["on", "about"]
+COMMANDS = ["on", "about", "events"]
 
 # instantiate Slack & Twilio clients
 slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN'))
@@ -77,6 +75,12 @@ def handle_command(command, channel):
 
     # determine if the user used any of our keywords
     tokens = command.split(' ')
+
+    # special case the "events" command
+    if tokens[0] == "events":
+        get_events(channel)
+        return
+
     keyword_locations = []
     for c in COMMANDS:
         try:
@@ -91,21 +95,6 @@ def handle_command(command, channel):
         did_not_understand(channel)
         return
 
-    # elif "events" in command:
-    #     now = datetime.datetime.now()
-    #     events = interact_with_database("select * from events where event_start between \'%s-%s-%s\' and \'%s-%s-%s\' order by event_start asc" #timestamps in postgres are 'YYYY-MM-DD HH-MM'
-    #                             %(str(now.year), str(now.month), str(now.day),
-    #                             str(now.year), str(now.month), str(int(now.day)+1)), debug = False)
-    #     if events:
-    #         for event in events:
-    #             response = "Event: {}, Location: {}, Duration: {} to {}, Description: {}, Link: {}".format(event[1], event[5], event[3].time(), event[4].time(), event[6], event[7])
-    #             slack_client.api_call("chat.postMessage", channel=channel,
-    #                   text=response, as_user=True)
-    #     else:
-    #         response = "No events found!"
-    #
-    # slack_client.api_call("chat.postMessage", channel=channel,
-    #                       text=response, as_user=True)
 
     print("command: {}".format(command))
 
@@ -161,6 +150,21 @@ def handle_command(command, channel):
             text=random.choice(response_choices),
             attachments=attachments,
             as_user=True)
+
+def get_events(channel):
+    now = datetime.datetime.now()
+    events = interact_with_database("select * from events where event_start between \'%s-%s-%s\' and \'%s-%s-%s\' order by event_start asc" #timestamps in postgres are 'YYYY-MM-DD HH-MM'
+                            %(str(now.year), str(now.month), str(now.day),
+                            str(now.year), str(now.month), str(int(now.day)+1)), debug = False)
+    if events:
+        for event in events:
+            response = "Event: {}, Location: {}, Duration: {} to {}, Description: {}, Link: {}".format(event[1], event[5], event[3].time(), event[4].time(), event[6], event[7])
+            slack_client.api_call("chat.postMessage", channel=channel,
+                  text=response, as_user=True)
+    else:
+        response = "No events found!"
+        slack_client.api_call("chat.postMessage", channel=channel,
+                              text=response, as_user=True)
 
 
 def did_not_understand(channel):
